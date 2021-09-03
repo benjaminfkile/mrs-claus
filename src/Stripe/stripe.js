@@ -7,7 +7,6 @@ router
     .route("/createCharge")
     .post(jsonParser, async (req, res) => {
         const { amount, cardId, oneTime, email } = req.body;
-        console.log(req.body)
         if (oneTime) {
             const {
                 cardNumber,
