@@ -2,16 +2,15 @@ const express = require("express");
 const router = express.Router();
 const jsonParser = express.json()
 let stripe
-if(process.env.TEST === "true"){
+if (process.env.TEST === "true") {
     stripe = require("stripe")(process.env.STRIPE_TEST_KEY);
-}else{
+} else {
     stripe = require("stripe")(process.env.STRIPE_KEY);
 }
 
 router
     .route("/createCharge")
     .post(jsonParser, async (req, res) => {
-        console.log(process.env.TEST)
         try {
             await stripe.charges.create({
                 amount: parseInt(req.body.amount) * 100,
@@ -24,7 +23,7 @@ router
             })
         } catch (err) {
             res.status(400).send({ message: "bad request" })
-            // console.log(err)
+            console.log(err)
         }
     })
 
