@@ -19,11 +19,11 @@ router
                 receipt_email: "benjaminfkile@gmail.com",
                 description: `Stripe Charge Of Amount ${parseInt(req.body.amount) * 100} for One Time Payment`,
             }).then(charge => {
+                // console.log("\n******************************\n" , charge , "\n******************************\n")
                 res.status(200).send({ message: charge })
             })
         } catch (err) {
-            res.status(400).send({ message: "bad request" })
-            console.log(err)
+            res.status(402).send({ message: "payment not accepted" })
         }
     })
 
