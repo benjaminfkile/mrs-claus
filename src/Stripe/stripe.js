@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mailer = require("../Mailer/Mailer")
 const jsonParser = express.json()
 let stripe
 if (process.env.TEST === "true") {
@@ -20,6 +21,7 @@ router
                 description: `Stripe Charge Of Amount ${parseInt(req.body.amount) * 100} for One Time Payment`,
             }).then(charge => {
                 // console.log("\n******************************\n" , charge , "\n******************************\n")
+                mailer.sendMail(req.body.email, req.body.name, req.body.amount, charge.receipt_url )
                 res.status(200).send({ message: charge })
             })
         } catch (err) {
