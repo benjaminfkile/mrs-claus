@@ -28,7 +28,7 @@ const mailer = {
                     <h2 style="color:#FFFFFF">
                         We recieved your donation of</h2>
                     <p style="font-size: 50px; color: #087700; margin: 0px;">
-                        $50
+                        $${amount}
                     </p>
                     <p style="color:#FFFFFF; padding-left: 20px; padding-right: 20px; font-size: 20px;">
                         People like you help Santa Fly and bring Christmas cheer to children in Missoula and
@@ -41,7 +41,7 @@ const mailer = {
                     ">
                         Click the link below to view your receipt.
                     </p>
-                    <a href="https://fonts.google.com/specimen/Mountains+of+Christmas?query=christmas" target="_blank"
+                    <a href=${receiptUrl} target="_blank"
                         style=" color: #087700;">
                         Receipt</a>
                 </div>
