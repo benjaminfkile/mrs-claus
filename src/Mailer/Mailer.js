@@ -13,7 +13,6 @@ const mailer = {
         
             <title>Donation Receipt</title>
             <meta name="description" content="The HTML5 Herald">
-            <link rel="stylesheet" href="css/styles.css?v=1.0">
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas&display=swap" rel="stylesheet">
@@ -28,20 +27,22 @@ const mailer = {
                         Western Montana Santa Flyover</h1>
                     <h2 style="color:#FFFFFF">
                         We recieved your donation of</h2>
-                    <p style="font-size: 50px; color: #10ff00; margin: 0px;">
-                        $${amount}
+                    <p style="font-size: 50px; color: #087700; margin: 0px;">
+                        $50
                     </p>
                     <p style="color:#FFFFFF; padding-left: 20px; padding-right: 20px; font-size: 20px;">
-                        People like you help Santa Fly and bring Christmas cheer to the amazing children in Missoula and
+                        People like you help Santa Fly and bring Christmas cheer to children in Missoula and
                         surrounding
-                        towns... Seriously you rock!
+                        towns...
+                        <br></br>
+                        Seriously you rock!
                     </p>
                     <p style="color:#FFFFFF; padding-left: 20px; padding-right: 20px; font-size: 20px;
                     ">
-                        Click the link below to view or print your receipt.
+                        Click the link below to view your receipt.
                     </p>
-                    <a href=${receiptUrl} target="_blank"
-                        style=" color: #FFFFFF;">
+                    <a href="https://fonts.google.com/specimen/Mountains+of+Christmas?query=christmas" target="_blank"
+                        style=" color: #087700;">
                         Receipt</a>
                 </div>
             </div>
