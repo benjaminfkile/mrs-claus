@@ -5,6 +5,7 @@ const cors = require("cors")
 const helmet = require("helmet")
 const { NODE_ENV } = require("./config")
 const stripeRouter = require("./Stripe/stripe")
+const sponsorRouter = require("./Sponsors/sponsor-router")
 const app = express()
 
 const morganOption = (NODE_ENV === "production")
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 })
 
 app.use("/api/donate", stripeRouter)
+app.use("/api/sponsors", sponsorRouter)
 
 app.use(function errorHandler(error, req, res, next) {
   let response
