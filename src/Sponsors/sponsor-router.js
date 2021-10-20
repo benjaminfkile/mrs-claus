@@ -30,12 +30,14 @@ sponsorRouter
     .post(jsonParser, async (req, res, next) => {
         const knexInstance = req.app.get("db")
         let body = req.body
+        let sponsorId
         if (body.name && body.contact_person && body.email && body.phone && body.amount_donated) {
-            body.sponsor_id = crypto.randomBytes(16).toString('hex')
+            sponsorId = crypto.randomBytes(16).toString('hex')
+            body.sponsor_id = sponsorId
             body.created_date = Date.now()
             try {
                 sponsorService.postSponsor(knexInstance, body).then(() => {
-                    res.status(200).send({ message: "sponsor posted" })
+                    res.status(200).send({ message: "sponsor posted", id: sponsorId })
                 }).catch(next)
             } catch (err) {
                 res.status(400).send({ message: "failed to post data" })

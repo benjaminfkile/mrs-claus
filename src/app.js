@@ -4,7 +4,7 @@ const morgan = require("morgan")
 const cors = require("cors")
 const helmet = require("helmet")
 const { NODE_ENV } = require("./config")
-const stripeRouter = require("./Stripe/stripe")
+const donateRouter = require("./Donate/donate-router")
 const sponsorRouter = require("./Sponsors/sponsor-router")
 const app = express()
 
@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
   res.send("Mrs Claus")
 })
 
-app.use("/api/donate", stripeRouter)
+app.use("/api/donate", donateRouter)
 app.use("/api/sponsors", sponsorRouter)
 
 app.use(function errorHandler(error, req, res, next) {
