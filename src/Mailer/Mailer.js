@@ -1,68 +1,157 @@
-const axios = require("axios")
+const https = require('https')
+
+// Keys used to encode	
+const masterString = process.env.MASTER_STRING;
+const MasterStrArry = StringToBytes(masterString);
+
+const masterKeyString = process.env.MASTER_KEY_STRING;
+const MasterKeyArry = StringToBytes(masterKeyString);
+
+var htmlEmail = { to: "", from: "", subject: "", file: "", var_old: "", var_new: "" }; // message structure
 
 const mailer = {
-    sendMail: (email, name, amount, receiptUrl) => {
 
-        let html =
-        `<!doctype html>
+    sendMail: (to, from, subject, file, var_old, var_new) => {
 
-        <html lang="en">
-        
-        <head>
-            <meta charset="utf-8">
-        
-            <title>Donation Receipt</title>
-            <meta name="description" content="The HTML5 Herald">
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas&display=swap" rel="stylesheet">
-        
-        </head>
-        
-        <body>
-            <div class="MessageWrapper" style="width: 100%;">
-                <div class="Message"
-                    style="border-radius: 5px; width: 80%; max-width: 500px; margin-top: 40px; margin-left: auto; margin-right: auto; padding-bottom: 20px; background-color: #1b2c2e; border: 1px solid #000000; text-align: center;">
-                    <h1 style="font-size: 50px; color: #FFFFFF; font-family: 'Mountains of Christmas', cursive;">
-                        Western Montana Santa Flyover</h1>
-                    <h2 style="color:#FFFFFF">
-                        We recieved your donation of</h2>
-                    <p style="font-size: 50px; color: #087700; margin: 0px;">
-                        $${amount}
-                    </p>
-                    <p style="color:#FFFFFF; padding-left: 20px; padding-right: 20px; font-size: 20px;">
-                        People like you help Santa Fly and bring Christmas cheer to children in Missoula and
-                        surrounding
-                        towns...
-                        <br></br>
-                        Seriously you rock!
-                    </p>
-                    <p style="color:#FFFFFF; padding-left: 20px; padding-right: 20px; font-size: 20px;
-                    ">
-                        Click the link below to view your receipt.
-                    </p>
-                    <a href=${receiptUrl} target="_blank"
-                        style=" color: #087700;">
-                        Receipt</a>
-                </div>
-            </div>
-        </body>
-        
-        </html>`
+        htmlEmail.to = to;
+        htmlEmail.from = from;
+        htmlEmail.subject = subject;
+        htmlEmail.file = file; // you host the file you want to be emailed
+        htmlEmail.var_old = var_old; // Variables on HTML to swap - Order must match
+        htmlEmail.var_new = var_new; // Variables on HTML to swap - Order must match
 
-        let rb = {
-            from: "Western Montana Santa Flover",
-            to: email,
-            subject: "Your Recent Donation",
-            text: `Thank you ${name} for your donation of $${amount}.`,
-            html: html,
-            key: process.env.MAILER_KEY
+        // Encode the message
+
+        const data = EncodeMessage(htmlEmail);
+
+        const options = {
+            hostname: process.env.MAIL_HOSTNAME,
+            path: '/mail_api/mail_api.php/mail_handler',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
         }
 
-        axios.post("https://glacial-plains-54815.herokuapp.com/send", rb)
-            .then(res => {
-                console.log(res.data)
+        const req = https.request(options, res => {
+            console.log(`statusCode: ${res.statusCode}`)
+
+            res.on('data', d => {
+                process.stdout.write(d)
             })
+        })
+
+        req.on('error', error => {
+            console.error(error)
+        })
+
+        req.write(data)
+        req.end()
     }
 }
+
+//******************************* this is all my functions
+
+// Check if the transponder message is correct
+function EncodeMessage(msg) {
+    var i;
+    var tmpInt;
+    var tmpRandByte = [];
+    var tmpRandomKey = [];
+    var tmpOutKey = [];
+
+    for (i = 0; i < 32; i++) {
+        tmpRandByte[i] = Math.floor(Math.random() * (255) + 1);
+    }
+
+    for (i = 0; i < 32; i++) {
+        tmpRandomKey[i] = tmpRandByte[i] ^ MasterStrArry[i];
+    }
+
+    for (i = 0; i < 16; i++) {
+        tmpInt = MasterKeyArry[i];
+        tmpOutKey[i] = tmpRandByte[tmpInt % 16];
+    }
+
+    var tmpTime = Math.round(Date.now() / 1000);
+    var tmpKey1 = strToHex(bin2String(tmpRandomKey), tmpRandomKey.length);
+    var tmpKey2 = strToHex(bin2String(tmpOutKey), tmpOutKey.length);
+
+    // Calc the CRC Order matters, don't crc the var_old and var_new
+    var tmpCrc = crcHelperStr2Bytes(0, tmpKey1);
+    tmpCrc = crcHelperStr2Bytes(tmpCrc, tmpKey2);
+    //tmpCrc = crcHelperStr2Bytes(tmpCrc, tmpTime); // dont CRC
+
+    tmpCrc = crcHelperStr2Bytes(tmpCrc, msg.from);
+    tmpCrc = crcHelperStr2Bytes(tmpCrc, msg.subject);
+    tmpCrc = crcHelperStr2Bytes(tmpCrc, msg.file);
+    tmpCrc = crcHelperStr2Bytes(tmpCrc, msg.to);
+
+
+    return JSON.stringify({
+        to: htmlEmail.to,
+        from: htmlEmail.from,
+        subject: htmlEmail.subject,
+        file: htmlEmail.file,
+        var_old: htmlEmail.var_old, // Order must match
+        var_new: htmlEmail.var_new, // Order must match
+        key_1: tmpKey1,
+        key_2: tmpKey2,
+        timestamp: tmpTime,
+        crc: tmpCrc,
+    });
+
+}
+
+function StringToBytes(str) {
+    var bytes = []; // char codes
+
+    for (var i = 0; i < str.length; ++i) {
+        var code = str.charCodeAt(i);
+
+        bytes = bytes.concat([code]);
+    }
+    return bytes;
+}
+
+function strToHex(str, len) {
+    var arr1 = [];
+    for (var n = 0, l = len; n < l; n++) {
+        var hex = Number(str.charCodeAt(n)).toString(16);
+        if (hex.length < 2)
+            hex = "0" + hex;
+        arr1.push(hex);
+    }
+    return arr1.join('');
+}
+
+function bin2String(array) {
+    var result = "";
+    for (var i = 0; i < array.length; i++) {
+        result += String.fromCharCode(array[i]);
+    }
+    return result;
+}
+
+function crcHelperStr2Bytes(crc, elm) {
+    return crc32c(crc, StringToBytes(elm), StringToBytes(elm).length)
+}
+
+function crc32c(crc, buf, len) {
+    var k;
+    var buffIdx = 0;
+    const POLY = 0xe1f9643d;
+
+    crc = ~crc >>> 0;
+    while (len--) {
+        crc ^= buf[buffIdx++];
+
+        for (k = 0; k < 8; k++)
+            crc = crc >>> 0 & 1 ? (crc >>> 1) ^ POLY >>> 0 : crc >>> 1;
+
+    }
+    return ~crc >>> 0;
+}
+
 module.exports = mailer

@@ -13,6 +13,7 @@ if (process.env.TEST === "true") {
 donaterouter
     .route("/createCharge")
     .post(jsonParser, async (req, res, next) => {
+        let newCharge = null
         try {
             await stripe.charges.create({
                 amount: parseInt(req.body.amount) * 100,
@@ -22,14 +23,16 @@ donaterouter
                 description: `Stripe Charge Of Amount ${parseInt(req.body.amount) * 100} for One Time Payment`,
             }).then(charge => {
                 // console.log("\n******************************\n" , charge , "\n******************************\n")
+                newCharge = charge
                 const knexInstance = req.app.get("db")
                 let postbody = { name: req.body.name, email: req.body.email, amount: req.body.amount, created_date: Date.now(), stripe_id: charge.id }
                 donateService.postDonation(knexInstance, postbody).then(() => {
-                    res.status(200).send({ id: charge.id, status: charge.status })
                 }).then(() => {
-                    mailer.sendMail(req.body.email, req.body.name, req.body.amount, charge.receipt_url)
+                    mailer.sendMail(req.body.email, "noreply@406santaflyover.com", "Your Recent Donation", "https://benjaminfkile.github.io/wmsfo-donation-receipt/index.html", ["${amount}", "${receiptUrl}"], [`${req.body.amount}`, `${newCharge.receipt_url}`],)
+                }).then(() => {
+                    res.status(200).send({ id: newCharge.id, status: newCharge.status })
                 })
-            })
+            }).catch(next)
         } catch (err) {
             console.log(err)
             res.status(402).send({ message: "payment not accepted" })
