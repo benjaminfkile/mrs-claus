@@ -28,7 +28,7 @@ donaterouter
                 let postbody = { name: req.body.name, email: req.body.email, amount: req.body.amount, created_date: Date.now(), stripe_id: charge.id }
                 donateService.postDonation(knexInstance, postbody).then(() => {
                 }).then(() => {
-                    mailer.sendMail(req.body.email, "noreply@406santaflyover.com", "Your Recent Donation", "https://benjaminfkile.github.io/wmsfo-donation-receipt/index.html", ["${amount}", "${receiptUrl}"], [`${req.body.amount}`, `${newCharge.receipt_url}`],)
+                    mailer.sendReceiptMail(req.body.email, [`${req.body.amount}`, `${newCharge.receipt_url}`],)
                 }).then(() => {
                     res.status(200).send({ id: newCharge.id, status: newCharge.status })
                 })

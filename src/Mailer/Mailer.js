@@ -11,14 +11,52 @@ var htmlEmail = { to: "", from: "", subject: "", file: "", var_old: "", var_new:
 
 const mailer = {
 
-    sendMail: (to, from, subject, file, var_old, var_new) => {
+    sendReceiptMail: (to, var_new) => {
 
         htmlEmail.to = to;
-        htmlEmail.from = from;
-        htmlEmail.subject = subject;
-        htmlEmail.file = file; // you host the file you want to be emailed
-        htmlEmail.var_old = var_old; // Variables on HTML to swap - Order must match
+        htmlEmail.from = process.env.NO_REPLY_EMAIL;
+        htmlEmail.subject = "Your Recent Donation";
+        htmlEmail.file = process.env.RECEIPT_HTML_FILE;
+        htmlEmail.var_old = ["${amount}", "${receiptUrl}"]; // Variables on HTML to swap - Order must match
         htmlEmail.var_new = var_new; // Variables on HTML to swap - Order must match
+
+        // Encode the message
+
+        const data = EncodeMessage(htmlEmail);
+
+        const options = {
+            hostname: process.env.MAIL_HOSTNAME,
+            path: '/mail_api/mail_api.php/mail_handler',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        }
+
+        const req = https.request(options, res => {
+            console.log(`statusCode: ${res.statusCode}`)
+
+            res.on('data', d => {
+                process.stdout.write(d)
+            })
+        })
+
+        req.on('error', error => {
+            console.error(error)
+        })
+
+        req.write(data)
+        req.end()
+    },
+    sendContactMail: (name, from, message ) => {
+
+        htmlEmail.to = process.env.CONTACT_US_EMAIL;
+        htmlEmail.from = from;
+        htmlEmail.subject = "New message from " + name;
+        htmlEmail.file = process.env.CONTACT_US_HTML_FILE
+        htmlEmail.var_old = ["${name}", "${message}", "${email}", "${rawLink}"]
+        htmlEmail.var_new = [`${name}`, `${message}`,`${from}`, `${from}`]
 
         // Encode the message
 
