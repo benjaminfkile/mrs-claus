@@ -10,7 +10,12 @@ sponsorRouter
         const knexInstance = req.app.get("db")
         sponsorService.getSponsors(knexInstance)
             .then(sponsors => {
-                res.send(sponsors)
+                let temp = sponsors
+                for(let i = 0; i < temp.length; i++){
+                    temp[i].hangTime = temp[i].amount_donated
+                    delete temp[i].amount_donated
+                }
+                res.send(temp)
             })
             .catch(next)
     })

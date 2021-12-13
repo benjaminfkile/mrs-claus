@@ -5,7 +5,7 @@ const service = {
     },
     getSponsors(knex) {
         return knex.from("sponsors")
-            .select("name", "website_url", "fb_url", "logo", "sponsor_id")
+            .select("name", "website_url", "fb_url", "logo", "logo_small", "amount_donated", "sponsor_id")
             .orderBy('amount_donated', 'desc')
     },
     getSponsor(knex, id) {
